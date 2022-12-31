@@ -115,7 +115,8 @@ class Staff_Member_Application(models.Model):
         COOKING = 'Cooking'
     class Status(models.TextChoices):
         PENDING = 'Pending'      
-        DONE = 'Cleaning'
+        Accepted = 'Accepted'
+        REJECTED = 'Rejected'
 
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255, null=True)
@@ -126,7 +127,9 @@ class Staff_Member_Application(models.Model):
 class Student_Application(models.Model):
     class Status(models.TextChoices):
         PENDING = 'Pending'      
-        DONE = 'Cleaning'
+        ACCEPTED = 'Accepted'
+        REJECTED = 'Rejected'
+
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255, null=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True,)
@@ -157,11 +160,11 @@ class Staff_Anouncements(models.Model):
 
 class Students_Units(models.Model):
     class Status(models.TextChoices):
-        UNREGiSTERED = 'Registered'      
+        UNREGISTERED = 'Registered'      
         REGISTERED = 'Unregistered'
     student = models.ForeignKey(Student, on_delete=models.CASCADE, null=True,)
     unit =  models.ForeignKey(Unit, on_delete=models.CASCADE, null=True,)
-    status =  models.CharField(max_length=20,choices=Status.choices, default=Status.UNREGiSTERED)
+    status =  models.CharField(max_length=20,choices=Status.choices, default=Status.UNREGISTERED)
     def __str__(self):
         return self.unit.name
 class Unit_Message(models.Model):
