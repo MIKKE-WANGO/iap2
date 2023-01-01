@@ -57,19 +57,28 @@ class StudentApplicationView(APIView):
         course = data['course']
         course = Course.objects.get(name=course)
 
-        new_application = Student_Application(name=name, email=email, course=course)
-        new_application.save()
+        if not Student_Application.objects.filter(email=email).exists():
 
-        return Response(
-            {'success': 'Application sent successfully'},
-            status=status.HTTP_201_CREATED
-        )
+            new_application = Student_Application(name=name, email=email, course=course)
+            new_application.save()
+
+            return Response(
+                {'success': 'Application sent successfully'},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                {'error': 'Application with this email already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        
 
     def get(self,request,format=None):
         user = request.user
         if user.is_superuser == True:
             student_applications = Student_Application.objects.filter(status='Pending')
-            student_applications = StudentApplicationSerializer(student_applications)
+            student_applications = StudentApplicationSerializer(student_applications, many=True)
             return Response(
                 {'student_applications': student_applications.data},
                 status=status.HTTP_200_OK
@@ -89,22 +98,29 @@ class StaffApplicationView(APIView):
         email = data['email']
         email = email.lower()
         department = data['department']
-        
-        new_application = Staff_Member_Application(name=name, email=email, department=department)
-        new_application.save()
 
-        return Response(
-            {'success': 'Application sent successfully'},
-            status=status.HTTP_201_CREATED
-        )
+        if not Staff_Member_Application.objects.filter(email=email).exists():
+        
+            new_application = Staff_Member_Application(name=name, email=email, department=department)
+            new_application.save()
+
+            return Response(
+                {'success': 'Application sent successfully'},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                {'error': 'Application with this email already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def get(self,request,format=None):
         user = request.user
         if user.is_superuser == True:
             staff_applications = Staff_Member_Application.objects.filter(status='Pending')
-            staff_applications = StaffApplicationSerializer(staff_applications)
+            staff_applications = StaffApplicationSerializer(staff_applications,many=True)
             return Response(
-                {'student_applications': staff_applications.data},
+                {'staff_applications': staff_applications.data},
                 status=status.HTTP_200_OK
             )
         else:
@@ -146,15 +162,15 @@ class ManageStudentApplication(APIView):
                 new_student = Student(user= new_user, course= course)
                 new_student.save()
 
-                student_units = Course.unit_set.all()
+                student_units = Unit.objects.filter(course=course)
                 for unit in student_units:
                     new_unit = Students_Units(student = new_student, unit=unit)
                     new_unit.save()
                 
 
-                send_mail("Enrolled", "Your have been successfully enrolled to the  " + student_application.course + "course.\n" + 
-                            "Use your email and this password , " + password + " to login into your account" + 
-                            "Once logged in go to unregistered units and register all of them", 
+                send_mail("Enrolled", "Your have been successfully enrolled to the  " + course.name + "course.\n" + 
+                            "Use your email and this password between comas, " + password + " ,to login into your account" + 
+                            "\nOnce logged in go to unregistered units and register all of them", 
                             "mikemundati@gmail.com",[ student_application.email], fail_silently=False)
 
                 return Response(
@@ -165,7 +181,7 @@ class ManageStudentApplication(APIView):
                 student_application.status = 'Rejected'
                 student_application.save()
                 return Response(
-                    {'success': 'Application failed'},
+                    {'success': 'Application Rejected'},
                     status=status.HTTP_200_OK
                 )
         else:
@@ -224,16 +240,29 @@ class StudentUnitsView(APIView):
             if action == 'registered':
                 student = Student.objects.get(user=user)
                 units = Students_Units.objects.filter(status='Registered',student=student)
-                units = StudentUnitSerializer(units)
+                #units = StudentUnitSerializer(units,many=True)
+                classes = []
+                for unit in units:
+                    name = unit.unit.name
+                    id = unit.id
+                    clas= {"name":name,"id":id}
+                    classes.append(clas)
                 return Response(
-                    {'units': units.data},
+                    {'units':classes},
                     status=status.HTTP_200_OK
                 )
             else:
+                student = Student.objects.get(user=user)
                 units = Students_Units.objects.filter(status='Unregistered',student=student)
-                units = StudentUnitSerializer(units)
+                #units = StudentUnitSerializer(units,many=True)
+                classes = []
+                for unit in units:
+                    name = unit.unit.name
+                    id = unit.id
+                    clas= {"name":name,"id":id}
+                    classes.append(clas)
                 return Response(
-                    {'units': units.data},
+                    {'units': classes},
                     status=status.HTTP_200_OK
                 )
         else:
@@ -243,7 +272,7 @@ class StudentUnitsView(APIView):
                 )
 
 class RegisterUnitView(APIView):
-    def post(self, request, pk):
+    def put(self, request, pk):
         user = request.user
         if user.is_student == True:
             student = Student.objects.get(user=user)
@@ -267,15 +296,40 @@ class RegisterUnitView(APIView):
 class StudentUnitActivitiesView(APIView):
     def get(self, request, pk):
         user = request.user
-        if user.is_student == True or user.is_lecturer ==True:
-            student_unit = Students_Units.objects.get(id=pk)
+        if user.is_student == True:
+            student = Student.objects.get(user=user)
+            student_unit = Students_Units.objects.get(id=pk,student=student)
             unit = Unit.objects.get(name=student_unit.unit)
+            
             unit_messages = Unit_Message.objects.filter(unit=unit)
-            unit_messages = UnitMessagesSerializer(unit_messages)
-            unit_activities = Unit_Activities.objects.filter(unit)
-            unit_activities = UnitActivitiesSerializer(unit_activities)
+            unit_messages = UnitMessagesSerializer(unit_messages,many=True)
+            unit_activities = Unit_Activities.objects.filter(unit=unit)
+            unit_activities = UnitActivitiesSerializer(unit_activities,many=True)
             return Response(
                     {'unit_messages': unit_messages.data, 'unit_activities':unit_activities.data},
+                    status=status.HTTP_200_OK
+                )
+
+        else:
+            return Response(
+                    {'error': 'Unauthorised'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+
+class LecturerUnitActivitiesView(APIView):
+    def get(self, request):
+        user = request.user
+        if user.is_lecturer == True:
+            lecturer = Lecturer.objects.get(user=user)      
+            unit = Unit.objects.get(Lecturer=lecturer)
+            
+            unit_messages = Unit_Message.objects.filter(unit=unit)
+            unit_messages = UnitMessagesSerializer(unit_messages,many=True)
+            unit_activities = Unit_Activities.objects.filter(unit=unit)
+            unit_activities = UnitActivitiesSerializer(unit_activities,many=True)
+            return Response(
+                    {'unit_messages': unit_messages.data, 'unit_activities':unit_activities.data, 'unit':unit.name},
                     status=status.HTTP_200_OK
                 )
 
@@ -290,7 +344,7 @@ class HandleUnitActivities(APIView):
     def post(self, request):
         user = request.user
         lecturer = Lecturer.objects.get(user=user)
-        unit = Unit.objects.get(lecturer=lecturer)
+        unit = Unit.objects.get(Lecturer=lecturer)
         if user.is_lecturer == True:
             data = request.data
             title = data['title']
@@ -311,7 +365,7 @@ class HandleUnitActivities(APIView):
         id = data['id']
         user = request.user
         lecturer = Lecturer.objects.get(user=user)
-        unit = Unit.objects.get(lecturer=lecturer)
+        unit = Unit.objects.get(Lecturer=lecturer)
         if user.is_lecturer == True:
             activity = Unit_Activities.objects.get(unit=unit,id=id) 
             activity.delete()
@@ -330,7 +384,7 @@ class HandleUnitMessages(APIView):
     def post(self, request):
         user = request.user
         lecturer = Lecturer.objects.get(user=user)
-        unit = Unit.objects.get(lecturer=lecturer)
+        unit = Unit.objects.get(Lecturer=lecturer)
         if user.is_lecturer == True:
             data = request.data
             title = data['title']
@@ -351,7 +405,7 @@ class HandleUnitMessages(APIView):
         id = data['id']
         user = request.user
         lecturer = Lecturer.objects.get(user=user)
-        unit = Unit.objects.get(lecturer=lecturer)
+        unit = Unit.objects.get(Lecturer=lecturer)
         if user.is_lecturer == True:
             activity = Unit_Message.objects.get(unit=unit,id=id) 
             activity.delete()
@@ -377,16 +431,16 @@ class StaffAnouncementsView(APIView):
             new_announcement = Staff_Anouncements(title=title,message=message)
             new_announcement.save()
             return Response(
-                        {'success': 'Unit message deleted successfully'},
+                        {'success': 'Announcement created successfully'},
                         status=status.HTTP_201_CREATED
                     )
 
     def get(self,request):
         user = request.user
         
-        if user.is_staff_member == True or user.is_lecturer:
+        if user.is_staff_member == True or user.is_lecturer or user.is_superuser:
             announcements = Staff_Anouncements.objects.all()
-            announcements = AnnouncementsSerializer(announcements)
+            announcements = AnnouncementsSerializer(announcements,many=True)
             return Response(
                         {'announcements': announcements.data},
                         status=status.HTTP_200_OK

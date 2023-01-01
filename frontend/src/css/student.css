@@ -1,0 +1,72 @@
+.head{
+    width:100%;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    margin-top: 50px;
+    margin-bottom: 30px;
+
+}
+.registered{
+   width: 50%;
+   text-align: right;
+   margin-right: 50px;
+   font-size: 20px;
+   color: blue;
+   cursor: pointer;
+}
+.unregistered{
+    width: 50%;
+    text-align: left;
+    font-size: 20px;
+   color: blue;
+   cursor: pointer;
+}
+.dark{
+    min-height: 100vh;
+    background-color: black;
+}
+.unit{
+    width: 100%;
+    display: inline-flex;
+    min-height: 100vh;
+    background-color: black;
+    color: blue;
+}
+
+.activities{
+    width: 50%;
+    padding: 20px;
+    text-align: center;
+}
+.unit  h4{
+    margin: 20px 0;
+    text-align: center;
+    color: antiquewhite;
+}
+h3{
+    text-align: center;
+    color: antiquewhite;
+    background-color: black;
+    padding: 20px;
+}
+.unit a{
+    text-decoration: none;
+    padding: 10px;
+    color: green;
+}
+.messages{
+    width: 50%;
+    padding: 20px;
+    text-align: center;
+    color: blue;
+}
+
+.info{
+    border: 1px solid blue;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+p{
+    padding: 10px;
+}

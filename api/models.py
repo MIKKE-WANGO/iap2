@@ -95,13 +95,15 @@ class Course(models.Model):
 
 class Lecturer(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True,)
-    
+    def __str__(self):
+        return self.user.email
+
 
 class Staff_Member(models.Model):
     class Department(models.TextChoices):
         Finance = 'Finance'      
         CLEANING = 'Cleaning'
-        COOKING = 'Cooking'
+        
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True,)
     department =  models.CharField(max_length=20,choices=Department.choices, default=Department.Finance)
@@ -112,7 +114,7 @@ class Staff_Member_Application(models.Model):
     class Department(models.TextChoices):
         Finance = 'Finance'      
         CLEANING = 'Cleaning'
-        COOKING = 'Cooking'
+        
     class Status(models.TextChoices):
         PENDING = 'Pending'      
         Accepted = 'Accepted'
@@ -144,7 +146,7 @@ class Student(models.Model):
     def __str__(self):
         return self.user.email
 class Unit(models.Model):
-    course = models.OneToOneField (Course, on_delete=models.CASCADE, null=True,)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True,)
     Lecturer = models.OneToOneField(Lecturer, on_delete=models.CASCADE, null=True,)
     name = models.CharField( max_length=100, null=True,blank=True, unique=True)
     code = models.CharField(max_length=10,null=True)
@@ -160,8 +162,8 @@ class Staff_Anouncements(models.Model):
 
 class Students_Units(models.Model):
     class Status(models.TextChoices):
-        UNREGISTERED = 'Registered'      
-        REGISTERED = 'Unregistered'
+        UNREGISTERED = 'Unregistered'      
+        REGISTERED = 'Registered'
     student = models.ForeignKey(Student, on_delete=models.CASCADE, null=True,)
     unit =  models.ForeignKey(Unit, on_delete=models.CASCADE, null=True,)
     status =  models.CharField(max_length=20,choices=Status.choices, default=Status.UNREGISTERED)

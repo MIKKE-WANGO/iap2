@@ -1,0 +1,30 @@
+.landing-choices{
+    width: 100%;
+    display: inline-flex;
+    flex-wrap: wrap;
+   
+    
+    align-content: center;
+    height: 100vh;
+    background-color: black;
+
+}
+
+.landing-choices div{
+   display: inline-flex;
+   align-content: center;
+   justify-content: center;
+}
+.landing-choices div a{
+    width: 200px;
+    margin: 30px ;
+    text-align: center;
+    padding: 10px;
+    text-decoration: none;
+    border: 1px solid blue;
+    color: blue;
+}
+
+.landing-choices div a:hover{
+    border: 2px solid green;
+}
