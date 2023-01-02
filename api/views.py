@@ -434,6 +434,11 @@ class StaffAnouncementsView(APIView):
                         {'success': 'Announcement created successfully'},
                         status=status.HTTP_201_CREATED
                     )
+        else:
+            return Response(
+                    {'error': 'Unauthorised'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
 
     def get(self,request):
         user = request.user
